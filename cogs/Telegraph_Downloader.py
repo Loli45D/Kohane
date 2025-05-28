@@ -41,8 +41,22 @@ class TelegraphDownloader(Cog_Extension):
         input_list = urls.split()
         results = await self._main(input_list)
 
+        # 發送總結 Embed
         embed = self.build_embed(results)
         await interaction.followup.send(embed=embed)
+
+        # 為每個成功案例發送詳細 Embed
+        for result in results:
+            if result["success"]:
+                detailed_embed = discord.Embed(
+                    title=result["name"],
+                    url=urls,  # 原始連結
+                    colour=0x00b0f4
+                )
+                detailed_embed.set_author(name="下載完成")
+                if result["first_image"]:
+                    detailed_embed.set_image(url=result["first_image"])
+                await interaction.followup.send(embed=detailed_embed)
 
     def build_embed(self, results: list[dict]) -> discord.Embed:
         embed = discord.Embed(
@@ -119,9 +133,15 @@ class TelegraphDownloader(Cog_Extension):
                 ch_folder = os.path.join(folder, "chapter")
                 os.makedirs(ch_folder, exist_ok=True)
 
+                first_image = None
                 for index, link in enumerate(image_links):
                     img_url = "https://telegra.ph" + link if link.startswith("/") else link
                     path = os.path.join(ch_folder, f"{index + 1}.jpg")
+                    
+                    # 儲存第一張圖片的URL
+                    if index == 0:
+                        first_image = img_url
+                        
                     download_image(img_url, path)
                     time.sleep(random.uniform(1.5, 3.0))
 
@@ -132,8 +152,8 @@ class TelegraphDownloader(Cog_Extension):
                 response.append({
                     "success": True,
                     "name": Name,
-                    "first_image": f"https://telegra.ph{image_links[0]}" if image_links else None
-                  })
+                    "first_image": first_image
+                })
 
             except Exception as e:
                 with open(os.path.join(TG_DOWN_FOLDER, "TGD_error.md"), 'a', encoding="utf-8") as errfile:
