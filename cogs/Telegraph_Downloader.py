@@ -66,9 +66,7 @@ class TelegraphDownloader(Cog_Extension):
         for result in results:
             status = "✅ 已完成" if result["success"] else "❌ 失敗"
             name = result["name"]
-            link = result.get("first_image")
-            field_value = f"[點我看圖片]({link})" if link else "無法取得圖片"
-            embed.add_field(name=f"{status}｜{name}", value=field_value, inline=False)
+            embed.add_field(name=f"{status}｜{name}", inline=False)
         return embed
 
 
